@@ -36,26 +36,28 @@ def make_clauses(variables, constants, string):
 
             # getting only the parameters in the predicate
             parenth = pred.find("(")
-            name = pred[:parenth]
-            param_str = pred[parenth+1:-1].split(",")
+            if parenth != -1:
+                name = pred[:parenth]
+                param_str = pred[parenth+1:-1].split(",")
 
-            # assigning parameters to variable, constant, or function
-            for para in param_str:
-                parenth = para.find("(")
-                if parenth == -1:
-                    if para in variables:
-                        param.append(cnf_parts.Parameter(para, VAR))
-                    elif para in constants:
-                        param.append(cnf_parts.Parameter(para, CONST))
-                else:
-                    func_name = para[:parenth]
-                    func_para = para[parenth+1:-1]
-                    if func_para in variables:
-                        p = cnf_parts.Parameter(func_para, VAR)
+                # assigning parameters to variable, constant, or function
+                for para in param_str:
+                    parenth = para.find("(")
+                    if parenth == -1:
+                        if para in variables:
+                            param.append(cnf_parts.Parameter(para, VAR))
+                        elif para in constants:
+                            param.append(cnf_parts.Parameter(para, CONST))
                     else:
-                        p = cnf_parts.Parameter(func_para, CONST)
-                    param.append(cnf_parts.Function(func_name, p))
-            predicates.append(cnf_parts.Predicate(name, param, neg))
+                        func_name = para[:parenth]
+                        func_para = para[parenth+1:-1]
+                        if func_para in variables:
+                            p = cnf_parts.Parameter(func_para, VAR)
+                        else:
+                            p = cnf_parts.Parameter(func_para, CONST)
+                        param.append(cnf_parts.Function(func_name, p))
+                predicates.append(cnf_parts.Predicate(name, param, neg))
+            predicates.append(cnf_parts.Predicate(pred, [], neg))
         clauses.append(predicates)
 
     return clauses
