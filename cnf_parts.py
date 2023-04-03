@@ -14,7 +14,7 @@ class Predicate:
     def __eq__(self, other):
         if not isinstance(other, Predicate):
             return NotImplemented
-        return self.name == other.name
+        return self.name == other.name and self.neg == other.neg and len(self.param) == len(other.param)
 
     def opposites(self, other):
         if not isinstance(other, Predicate):

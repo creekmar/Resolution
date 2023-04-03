@@ -8,7 +8,6 @@ Introduction to AI
 import sys
 import cnf_parts
 
-
 VAR = 0
 CONST = 1
 
@@ -57,7 +56,8 @@ def make_clauses(variables, constants, string):
                             p = cnf_parts.Parameter(func_para, CONST)
                         param.append(cnf_parts.Function(func_name, p))
                 predicates.append(cnf_parts.Predicate(name, param, neg))
-            predicates.append(cnf_parts.Predicate(pred, [], neg))
+            else:
+                predicates.append(cnf_parts.Predicate(pred, [], neg))
         clauses.append(predicates)
 
     return clauses
@@ -80,21 +80,34 @@ def parse_file(filename):
 
 def resolution(clauses):
     tocheck = clauses.copy()
+    beenCreated = []
     unification = {}
     while len(tocheck) != 0:
         current = tocheck.pop()
         for clause in clauses:
+            haveUnified = False
             unified = current.copy()
             unified.extend(clause)
+            beenRemoved = []
+            if current.__eq__(clause):
+                continue
             for predA in current:
                 for predB in clause:
+                    if haveUnified:
+                        break
                     #print(predA.neg, predA.name, predB.neg, predB.name)
+                    if predA in beenRemoved and predB in beenRemoved:
+                        continue
                     alias = predA.opposites(predB)
                     if alias is not False:
-                        #print("BEFORE", unified)
+                        print("B", unified)
+                        # print(predA)
+                        # print(predB)
                         unified.remove(predA)
                         unified.remove(predB)
-                        #print("ERROR",unified)
+                        beenRemoved.append(predA)
+                        beenRemoved.append(predB)
+                        print("A",unified)
                         if len(unified) == 0:
                             return False
                         for pred in unified:
@@ -104,7 +117,11 @@ def resolution(clauses):
                             if pred is cnf_parts.Function:
                                 if pred.param.name in alias:
                                     pred.param.name = alias[pred.param.name]
-                        tocheck.append(unified)
+                        if unified not in beenCreated:
+                            tocheck.append(unified)
+                            beenCreated.append(unified)
+                        haveUnified = True
+
     return True
 
 
@@ -114,9 +131,9 @@ def main():
         filename = sys.argv[1]
         clauses = parse_file(filename)
         if resolution(clauses):
-            print("Yes")
+            print("yes")
         else:
-            print("No")
+            print("no")
     else:
         print("Usage: python3 lab2.py KB.cnf ")
 
