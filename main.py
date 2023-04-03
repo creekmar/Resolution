@@ -13,7 +13,7 @@ VAR = 0
 CONST = 1
 
 
-def make_clauses(predicates, variables, constants, functions, string):
+def make_clauses(variables, constants, string):
     clauses = list()
     lines = string.split("\n")
 
@@ -63,27 +63,58 @@ def make_clauses(predicates, variables, constants, functions, string):
 
 def parse_file(filename):
     with open(filename) as file:
-        line = file.readline().split()
-        line.pop(0)
-        predicates = set(line)
+        file.readline()
         line = file.readline().split()
         line.pop(0)
         variables = set(line)
         line = file.readline().split()
         line.pop(0)
         constants = set(line)
-        line = file.readline().split()
-        line.pop(0)
-        functions = set(line)
         file.readline()
-        clauses = make_clauses(predicates, variables, constants, functions, file.read())
+        file.readline()
+        clauses = make_clauses(variables, constants, file.read())
         return clauses
+
+
+def resolution(clauses):
+    tocheck = clauses.copy()
+    unification = {}
+    while len(tocheck) != 0:
+        current = tocheck.pop()
+        for clause in clauses:
+            unified = current.copy()
+            unified.extend(clause)
+            for predA in current:
+                for predB in clause:
+                    #print(predA.neg, predA.name, predB.neg, predB.name)
+                    alias = predA.opposites(predB)
+                    if alias is not False:
+                        #print("BEFORE", unified)
+                        unified.remove(predA)
+                        unified.remove(predB)
+                        #print("ERROR",unified)
+                        if len(unified) == 0:
+                            return False
+                        for pred in unified:
+                            if pred is cnf_parts.Parameter:
+                                if pred.name in alias:
+                                    pred.name = alias[pred.name]
+                            if pred is cnf_parts.Function:
+                                if pred.param.name in alias:
+                                    pred.param.name = alias[pred.param.name]
+                        tocheck.append(unified)
+    return True
+
 
 
 def main():
     if len(sys.argv) == 2:
         filename = sys.argv[1]
         clauses = parse_file(filename)
+        if resolution(clauses):
+            print("Yes")
+        else:
+            print("No")
     else:
         print("Usage: python3 lab2.py KB.cnf ")
 
